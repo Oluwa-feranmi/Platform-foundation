@@ -1,0 +1,39 @@
+name: Validate CloudFormation Templates
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'templates/**'
+            - '.github/workflows/validate-cloudformation.yml'
+    pull_request:
+        branches:
+            - main
+        paths:
+            - 'templates/**'
+            - '.github/workflows/validate-cloudformation.yml'
+    
+jobs:
+    lint-and-security-scan:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up python
+              uses: actions/setup-python@v5
+              with:
+                python-version: '3.12'
+
+            - name: Install validation tools
+              run: |
+                   python -m pip install --upgrade pip
+                   pip install cfn-lint checkov
+
+            - name: Run cfn-lint
+              run: cfn-lint templates/**/*.yml templates/**/*.yaml
+
+            - name: Run checkov
+              run: checkov --directory templates --framework cloudformation --output cli

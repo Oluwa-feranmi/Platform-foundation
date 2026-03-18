@@ -1,0 +1,180 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+    ComputeRoleBoundaryPolicy:
+      Type: AWS::IAM::ManagedPolicy
+      Properties:
+        PolicyName: PlatformComputeRoleBoundary
+        Description: This policy is used as a role boundary for all compute roles in the platform.
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: AllowSafeComputeActions
+              Effect: Allow
+              Action:
+                # CloudWatch Logs
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - logs:DescribeLogGroups
+                - logs:DescribeLogStreams
+                # S3
+                - s3:GetObject
+                - s3:PutObject
+                - s3:DeleteObject
+                - s3:ListBucket
+                - s3:GetBucketLocation
+                # DynamoDB
+                - dynamodb:PutItem
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:Scan
+                - dynamodb:BatchGetItem
+                - dynamodb:BatchWriteItem
+                # SQS
+                - sqs:SendMessage
+                - sqs:ReceiveMessage
+                - sqs:DeleteMessage
+                - sqs:GetQueueAttributes
+                - sqs:GetQueueUrl
+                # SNS
+                - sns:Publish
+                - sns:ListTopics
+                # SSM Parameter Store
+                - ssm:GetParameter
+                - ssm:GetParameters
+                - ssm:GetParametersByPath
+                # KMS (use only, no key management)
+                - kms:Decrypt
+                - kms:GenerateDataKey
+                - kms:DescribeKey
+                # EC2 read-only (for metadata/networking context)
+                - ec2:DescribeInstances
+                - ec2:DescribeSubnets
+                - ec2:DescribeSecurityGroups
+                - ec2:DescribeVpcs
+                # X-Ray tracing
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+                # Secrets Manager (read only)
+                - secretsmanager:GetSecretValue
+                - secretsmanager:DescribeSecret
+              # Resource: '*' is required here because many of these actions (e.g. logs, xray)
+              # do not support resource-level restrictions in IAM
+              Resource: '*'
+
+            - Sid: DenyPrivilegeEscalationAndDangerousActions
+              Effect: Deny
+              Action:
+                # IAM write / escalation
+                - iam:CreateUser
+                - iam:DeleteUser
+                - iam:CreateRole
+                - iam:DeleteRole
+                - iam:AttachRolePolicy
+                - iam:DetachRolePolicy
+                - iam:AttachUserPolicy
+                - iam:DetachUserPolicy
+                - iam:AttachGroupPolicy
+                - iam:DetachGroupPolicy
+                - iam:PutRolePolicy
+                - iam:PutUserPolicy
+                - iam:PutGroupPolicy
+                - iam:DeleteRolePolicy
+                - iam:DeleteUserPolicy
+                - iam:DeleteGroupPolicy
+                - iam:CreatePolicyVersion
+                - iam:SetDefaultPolicyVersion
+                - iam:PassRole
+                - iam:UpdateAssumeRolePolicy
+                - iam:UpdateRole
+                - iam:TagRole
+                - iam:UntagRole
+                - iam:CreateServiceLinkedRole
+                # Boundary tampering
+                - iam:DeleteRolePermissionsBoundary
+                - iam:DeleteUserPermissionsBoundary
+                - iam:PutRolePermissionsBoundary
+                - iam:PutUserPermissionsBoundary
+                # Access key / credential creation
+                - iam:CreateAccessKey
+                - iam:CreateLoginProfile
+                - iam:UpdateLoginProfile
+                # AWS Organizations
+                - organizations:*
+                # Account & billing
+                - aws-portal:*
+                - billing:*
+                - account:*
+                # CloudTrail tampering
+                - cloudtrail:DeleteTrail
+                - cloudtrail:StopLogging
+                - cloudtrail:UpdateTrail
+                # GuardDuty / Security Hub tampering
+                - guardduty:DeleteDetector
+                - guardduty:DisassociateFromMasterAccount
+                - securityhub:DisableSecurityHub
+                - securityhub:DeleteInvitations
+                # KMS key deletion/management
+                - kms:DeleteImportedKeyMaterial
+                - kms:ScheduleKeyDeletion
+                - kms:DisableKey
+                - kms:PutKeyPolicy
+              # Resource: '*' required — Deny statements must match the same resource scope
+              # as the Allow above, otherwise the deny can be bypassed by resource specificity
+              Resource: '*'
+
+            - Sid: DenyEverythingOutsideAllowedActionList
+              Effect: Deny
+              # NotAction + Deny is a strong boundary pattern:
+              # any action NOT in the safe list below is explicitly denied,
+              # regardless of what other policies allow (including AdministratorAccess)
+              NotAction:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - logs:DescribeLogGroups
+                - logs:DescribeLogStreams
+                - s3:GetObject
+                - s3:PutObject
+                - s3:DeleteObject
+                - s3:ListBucket
+                - s3:GetBucketLocation
+                - dynamodb:PutItem
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:Scan
+                - dynamodb:BatchGetItem
+                - dynamodb:BatchWriteItem
+                - sqs:SendMessage
+                - sqs:ReceiveMessage
+                - sqs:DeleteMessage
+                - sqs:GetQueueAttributes
+                - sqs:GetQueueUrl
+                - sns:Publish
+                - sns:ListTopics
+                - ssm:GetParameter
+                - ssm:GetParameters
+                - ssm:GetParametersByPath
+                - kms:Decrypt
+                - kms:GenerateDataKey
+                - kms:DescribeKey
+                - ec2:DescribeInstances
+                - ec2:DescribeSubnets
+                - ec2:DescribeSecurityGroups
+                - ec2:DescribeVpcs
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+                - secretsmanager:GetSecretValue
+                - secretsmanager:DescribeSecret
+              Resource: '*'
+
+Outputs:
+  BoundaryPolicyArn:
+    Description: The ARN of the role boundary policy to apply to compute roles.
+    Value: !Ref ComputeRoleBoundaryPolicy
+    Export:
+      Name: !Sub '${AWS::StackName}-RoleBoundaryPolicyArn'
