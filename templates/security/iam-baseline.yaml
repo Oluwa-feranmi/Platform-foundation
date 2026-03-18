@@ -3,7 +3,7 @@ Resources:
     ComputeRoleBoundaryPolicy:
       Type: AWS::IAM::ManagedPolicy
       Properties:
-        ManagedPolicyName: PlatformComputeRoleBoundary
+       # ManagedPolicyName: PlatformComputeRoleBoundary
         Description: This policy is used as a role boundary for all compute roles in the platform.
         PolicyDocument:
           Version: '2012-10-17'
