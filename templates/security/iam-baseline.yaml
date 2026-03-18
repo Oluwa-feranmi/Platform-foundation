@@ -3,7 +3,7 @@ Resources:
     ComputeRoleBoundaryPolicy:
       Type: AWS::IAM::ManagedPolicy
       Properties:
-       # ManagedPolicyName: PlatformComputeRoleBoundary
+        # ManagedPolicyName: PlatformComputeRoleBoundary
         Description: This policy is used as a role boundary for all compute roles in the platform.
         PolicyDocument:
           Version: '2012-10-17'
@@ -59,24 +59,52 @@ Resources:
                 - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}/*'
                 - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${AWS::StackName}/*'
 
-            - Sid: AllowScopedWriteActions
+            # Write actions split per service so each condition key is valid for that service
+            # S3 objects do not support aws:ResourceTag; s3:prefix restricts to stack-owned paths (CKV_AWS_111)
+            - Sid: AllowScopedS3WriteActions
               Effect: Allow
               Action:
                 - s3:PutObject
                 - s3:DeleteObject
+              Resource:
+                - !Sub 'arn:aws:s3:::${AWS::StackName}-*/*'
+              Condition:
+                StringLike:
+                  s3:prefix:
+                    - !Sub '${AWS::StackName}/*'
+
+            # DynamoDB supports aws:ResourceTag on table ARNs (CKV_AWS_111)
+            - Sid: AllowScopedDynamoDBWriteActions
+              Effect: Allow
+              Action:
                 - dynamodb:PutItem
                 - dynamodb:UpdateItem
                 - dynamodb:DeleteItem
                 - dynamodb:BatchWriteItem
+              Resource:
+                - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AWS::StackName}-*'
+              Condition:
+                StringEquals:
+                  aws:ResourceTag/ManagedBy: platform
+
+            # SQS supports aws:ResourceTag on queue ARNs (CKV_AWS_111)
+            - Sid: AllowScopedSQSWriteActions
+              Effect: Allow
+              Action:
                 - sqs:SendMessage
                 - sqs:DeleteMessage
-                - sns:Publish
-              # Write actions scoped to stack-owned resources only (CKV_AWS_111)
-              # Condition further restricts writes to resources tagged ManagedBy=platform
               Resource:
-                - !Sub 'arn:aws:s3:::${AWS::StackName}-*/*'
-                - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AWS::StackName}-*'
                 - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${AWS::StackName}-*'
+              Condition:
+                StringEquals:
+                  aws:ResourceTag/ManagedBy: platform
+
+            # SNS supports aws:ResourceTag on topic ARNs (CKV_AWS_111)
+            - Sid: AllowScopedSNSWriteActions
+              Effect: Allow
+              Action:
+                - sns:Publish
+              Resource:
                 - !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${AWS::StackName}-*'
               Condition:
                 StringEquals:
