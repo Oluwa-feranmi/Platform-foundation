@@ -35,7 +35,11 @@ Parameters:
     AllowedValues:
       - ALL
       - ACCEPT
-      - REJECT 
+      - REJECT
+
+  FlowLogsKmsKeyId:
+    Description: ARN of the KMS key used to encrypt the VPC Flow Logs log group (CKV_AWS_158)
+    Type: String
 
 
 Resources:
@@ -337,6 +341,7 @@ Resources:
     Properties:
       LogGroupName: !Sub '/aws/vpc/${EnvironmentName}-flow-logs'
       RetentionInDays: 7
+      KmsKeyId: !Ref FlowLogsKmsKeyId
       Tags:
         - Key: Name
           Value: !Sub '${EnvironmentName}-vpc-flow-logs'
@@ -404,6 +409,7 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: !Ref VpcCIDR
+          Description: Allow HTTPS from VPC for interface endpoints
       Tags:
         - Key: Name
           Value: !Sub '${EnvironmentName}-endpoint-sg'
