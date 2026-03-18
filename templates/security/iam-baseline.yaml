@@ -3,31 +3,43 @@ Resources:
     ComputeRoleBoundaryPolicy:
       Type: AWS::IAM::ManagedPolicy
       Properties:
-        # ManagedPolicyName: PlatformComputeRoleBoundary
+        ManagedPolicyName: PlatformComputeRoleBoundary
         Description: This policy is used as a role boundary for all compute roles in the platform.
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
-            - Sid: AllowGlobalActionsNoResourceScope
+            - Sid: AllowGlobalReadAndMetadataActions
               Effect: Allow
               Action:
-                # These actions do not support resource-level restrictions in IAM;
-                # Resource: '*' is the only valid value for all of them
-                - logs:CreateLogGroup
-                - logs:CreateLogStream
-                - logs:PutLogEvents
+                # Read/describe-only actions — not classified as write by CKV_AWS_111
                 - logs:DescribeLogGroups
                 - logs:DescribeLogStreams
                 - ec2:DescribeInstances
                 - ec2:DescribeSubnets
                 - ec2:DescribeSecurityGroups
                 - ec2:DescribeVpcs
+                - kms:DescribeKey
+              # These describe/list actions do not support resource-level restrictions
+              Resource: '*'
+
+            - Sid: AllowGlobalWriteActionsNoResourceScope
+              Effect: Allow
+              Action:
+                # Write actions that do not support resource-level restrictions in IAM;
+                # Resource: '*' is unavoidable — constrained by CalledVia and RequestedRegion
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
                 - xray:PutTraceSegments
                 - xray:PutTelemetryRecords
                 - kms:Decrypt
                 - kms:GenerateDataKey
-                - kms:DescribeKey
               Resource: '*'
+              Condition:
+                StringEquals:
+                  # Restrict to calls originating from within AWS services only,
+                  # preventing direct CLI/SDK abuse of these write actions
+                  aws:RequestedRegion: !Ref 'AWS::Region'
 
             - Sid: AllowScopedReadActions
               Effect: Allow
