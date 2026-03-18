@@ -68,7 +68,7 @@ Resources:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
-  # ── Public NACL ──────────────────────────────────────────────────────────────
+  # Public NACL 
   PublicNetworkAcl:
     Type: AWS::EC2::NetworkAcl
     Properties:
@@ -160,7 +160,7 @@ Resources:
       SubnetId: !Ref PublicSubnet2
       NetworkAclId: !Ref PublicNetworkAcl
 
-  # ── Private NACL ─────────────────────────────────────────────────────────────
+  # Private NACL
   PrivateNetworkAcl:
     Type: AWS::EC2::NetworkAcl
     Properties:
@@ -361,7 +361,7 @@ Resources:
         - Key: Name
           Value: !Sub '${EnvironmentName}-vpc-flow-log'
 
-  # ── CloudWatch Alarm: Flow Logs ingestion anomaly ─────────────────────────────
+  # CloudWatch Alarm: Flow Logs ingestion anomaly
   FlowLogsIngestAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -398,7 +398,7 @@ Resources:
         - !Ref PrivateRouteTable
         - !Ref PublicRouteTable
 
-  # ── Interface Endpoint Security Group ────────────────────────────────────────
+  # Interface Endpoint Security Group
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -414,7 +414,7 @@ Resources:
         - Key: Name
           Value: !Sub '${EnvironmentName}-endpoint-sg'
 
-  # ── SSM Interface Endpoints ───────────────────────────────────────────────────
+  # SSM Interface Endpoints
   SSMEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -454,7 +454,7 @@ Resources:
       SecurityGroupIds:
         - !Ref EndpointSecurityGroup
 
-  # ── ECR Interface Endpoints ───────────────────────────────────────────────────
+  # ECR Interface Endpoints
   ECRApiEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
