@@ -78,4 +78,3 @@ License
 MIT
 
 Last updated: March 2026
-- Badges: [<image-card alt="Validate IaC" src="https://github.com/Oluwa-feranmi/Platform-foundation/actions/workflows/validate-cloudformation.yml/badge.svg" ></image-card>](https://github.com/Oluwa-feranmi/Platform-foundation/actions/workflows/validate-cloudformation.yml)
