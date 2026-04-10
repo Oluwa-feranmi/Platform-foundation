@@ -17,6 +17,25 @@ Goal: Create a secure, repeatable, cost-aware starting point for serverless/cont
   - `cfn-lint` (syntax & best practices)
   - `checkov` (security & compliance scanning)
 
+  ## 🏗️ Architecture
+
+```mermaid
+flowchart TD
+    A[Developer / GitHub] --> B[GitHub Actions CI]
+    B --> C{cfn-lint + Checkov}
+    C -->|Pass| D[CloudFormation Templates]
+    D --> E[AWS VPC Stack]
+    E --> F[Custom VPC\n2 AZs]
+    F --> G[Public Subnets]
+    F --> H[Private Subnets]
+    F --> I[VPC Flow Logs]
+    F --> J[S3 & DynamoDB\nGateway Endpoints]
+    D --> K[IAM Permissions Boundary]
+    K --> L[Prevent Privilege Escalation]
+    M[Deployment Scripts] --> E
+    style E fill:#FF9900,stroke:#232F3E,color:white
+```
+
 ## Repository Structure
 
 ```text
