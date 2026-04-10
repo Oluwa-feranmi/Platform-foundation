@@ -17,23 +17,30 @@ Goal: Create a secure, repeatable, cost-aware starting point for serverless/cont
   - `cfn-lint` (syntax & best practices)
   - `checkov` (security & compliance scanning)
 
-  ## 🏗️ Architecture
+ ## 🏗️ Architecture
 
 ```mermaid
 flowchart TD
     A[Developer / GitHub] --> B[GitHub Actions CI]
-    B --> C{cfn-lint + Checkov}
-    C -->|Pass| D[CloudFormation Templates]
-    D --> E[AWS VPC Stack]
-    E --> F[Custom VPC\n2 AZs]
-    F --> G[Public Subnets]
-    F --> H[Private Subnets]
-    F --> I[VPC Flow Logs]
-    F --> J[S3 & DynamoDB\nGateway Endpoints]
-    D --> K[IAM Permissions Boundary]
-    K --> L[Prevent Privilege Escalation]
-    M[Deployment Scripts] --> E
+    B --> C{cfn-lint + Checkov Validation}
+    C -->|Pass| D[CloudFormation Stack\nvpc-baseline.yml]
+    
+    D --> E[AWS VPC\nCustom VPC - 2 AZs]
+    E --> F[Public Subnets\n+ Internet Gateway]
+    E --> G[Private Subnets]
+    E --> H[VPC Flow Logs\n→ CloudWatch Logs]
+    
+    D --> I[Gateway Endpoints]
+    I --> J[S3 Gateway Endpoint]
+    I --> K[DynamoDB Gateway Endpoint]
+    
+    D --> L[IAM Permissions Boundary\nsecurity/iam-baseline.yaml]
+    L --> M[Secure IAM Policies\nPrevent Privilege Escalation]
+
+    N[Deployment Scripts\nscripts/deploy-vpc.sh] --> D
+
     style E fill:#FF9900,stroke:#232F3E,color:white
+    style I fill:#FF9900,stroke:#232F3E,color:white
 ```
 
 ## Repository Structure
