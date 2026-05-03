@@ -102,5 +102,10 @@ Python + pip (for validation tools)
 
 License
 MIT
+👤 Author
+Oluwa-feranmi
+Platform & Cloud Engineering Enthusiast | SRE | DevOps Engineer
+
+GitHub: @Oluwa-feranmi
 
 Last updated: March 2026
